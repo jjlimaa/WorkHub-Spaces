@@ -10,9 +10,11 @@ app.use(express.json())
 // rotas
 const authRoutes = require('./routes/auth.router')
 const userRoutes = require('./routes/user.router')
+const espacoRoutes = require('./routes/espaco.router')
 
 app.use('/auth', authRoutes)
 app.use('/user', userRoutes)
+app.use('/espaco', espacoRoutes)
 
 // rota pública
 app.get('/', (req, res) => {
