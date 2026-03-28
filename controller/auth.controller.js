@@ -71,16 +71,22 @@ const { nome, email, senha, confirmarsenha, contacto, morada, nif, atividade, em
     const senhaHash = await bcrypt.hash(senha, salt)
 
 
-    // --- Criar o objeto User com os dados validados ---
+    const emailAdmin = process.env.ADMIN_EMAIL
+        ? String(process.env.ADMIN_EMAIL).trim().toLowerCase()
+        : null
+    const role =
+        emailAdmin && String(email).trim().toLowerCase() === emailAdmin ? 'admin' : 'cliente'
+
     const user = new User({
         nome,
         email,
-        senha: senhaHash, // Nunca guardar a password em texto simples
+        senha: senhaHash,
         contacto,
         morada,
         nif,
         atividade,
-        empresa
+        empresa,
+        role
     })
 
     try {
@@ -113,6 +119,9 @@ exports.login = async (req, res) => {
         return res.status(422).json({ msg: "Utilizador não existe!" })
     }
 
+    if (userLo.conta_ativa === false) {
+        return res.status(403).json({ msg: 'Conta suspensa. Contacte o suporte.' })
+    }
 
     // --- Comparar a password introduzida com o hash guardado na DB ---
     const verSenha = await bcrypt.compare(senha, userLo.senha)
@@ -128,11 +137,18 @@ exports.login = async (req, res) => {
 
         // O token contém o ID do utilizador e é assinado com o SECRET do .env
         const token = jwt.sign(
-            { id: userLo._id },
+            {
+                id: String(userLo._id),
+                role: userLo.role || 'cliente'
+            },
             secret
         )
 
-        res.status(200).json({ msg: "Login realizado com sucesso!", token })
+        res.status(200).json({
+            msg: 'Login realizado com sucesso!',
+            token,
+            role: userLo.role || 'cliente'
+        })
     } catch (err) {
         console.log(err)
         res.status(500).json({ msg: "Erro inesperado, tente novamente mais tarde!" })

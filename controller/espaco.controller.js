@@ -1,59 +1,78 @@
 function EspacoController(EspacoModel) {
 
-    let controller = {
-            create,
-            findAll,
-            update,
-            removeById,
-            findById
-        }
-
-
-    function create(values){
-        let newEspaco = EspacoModel(values)
-        return save (newEspaco)
+    const controller = {
+        create,
+        findAll,
+        findAtivos,
+        update,
+        removeById,
+        findById
     }
 
-    function save(newEspaco){
-        return new Promise(function(resolve, reject){
+    function create(values) {
+        const newEspaco = new EspacoModel(values)
+        return save(newEspaco)
+    }
+
+    function save(newEspaco) {
+        return new Promise(function (resolve, reject) {
             newEspaco.save()
-            .then(() => resolve('Espaço Criado com Sucesso!'))
-            .catch((err) => reject(err))
+                .then(() => resolve('Espaço criado com sucesso!'))
+                .catch((err) => reject(err))
         })
     }
 
-    function findAll(){
-        return new Promise(function(resolve,reject){
+    function findAll() {
+        return new Promise(function (resolve, reject) {
             EspacoModel.find({})
-            .then((espaco) => resolve (espaco))
-            .catch((err) => reject (err))
+                .then((espacos) => resolve(espacos))
+                .catch((err) => reject(err))
         })
     }
 
-    function findById(id){
-        return new Promise(function(resolve,reject){
+    function findAtivos() {
+        return new Promise(function (resolve, reject) {
+            EspacoModel.find({ ativo: { $ne: false } })
+                .then((espacos) => resolve(espacos))
+                .catch((err) => reject(err))
+        })
+    }
+
+    function findById(id) {
+        return new Promise(function (resolve, reject) {
             EspacoModel.findById(id)
-            .then((espaco) => resolve(espaco))
-            .catch((err) => reject(err))
+                .then((espaco) => resolve(espaco))
+                .catch((err) => reject(err))
         })
     }
 
-    function update(id,espaco){
-        return new Promise(function(resolve,reject){
-            EspacoModel.findByIdAndUpdate(id,espaco)
-            .then(() => resolve(espaco))
-            .catch((err) => reject(err))
+    function update(id, dados) {
+        return new Promise(function (resolve, reject) {
+            EspacoModel.findByIdAndUpdate(id, dados, { new: true, runValidators: true })
+                .then((doc) => {
+                    if (!doc) {
+                        return reject(new Error('Espaço não encontrado.'))
+                    }
+                    resolve(doc)
+                })
+                .catch((err) => reject(err))
         })
     }
 
-    function removeById(id){
-        return new Promise(function(resolve,reject){
+    function removeById(id) {
+        return new Promise(function (resolve, reject) {
             EspacoModel.findByIdAndDelete(id)
-            .then((espaco) => resolve(espaco))
-            .catch((err) => reject(err))
-        })   
+                .then((doc) => {
+                    if (!doc) {
+                        return reject(new Error('Espaço não encontrado.'))
+                    }
+                    resolve(doc)
+                })
+                .catch((err) => reject(err))
+        })
     }
-    return controller;
+
+    return controller
 }
-module.exports = EspacoController;
-   
+
+module.exports = EspacoController
